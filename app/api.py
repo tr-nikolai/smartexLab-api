@@ -185,4 +185,4 @@ if __name__ == '__main__':
     formatter = logging.Formatter('%(asctime)s : %(message)s')
     handler.setFormatter(formatter)
     app.logger.addHandler(handler)
-    app.run(host='0.0.0.0', debug=True, port=12334, use_reloader=True)
+    app.run(host='0.0.0.0', debug=True, port=12333, use_reloader=True)
