@@ -52,10 +52,10 @@ def get_all_users():
 def get_one_user(user_id):
     user = Users.query.filter_by(id=user_id).first()
     if not user:
-        return jsonify({'message':'User not found!'})
+        return jsonify({'message': 'User not found!'})
     user_data = {'id': user.id, 'last_name': user.last_name, 'first_name': user.first_name,
                  'patronymic_name': user.first_name, 'password': user.password, 'email': user.email,
-                 'user_cards':'users/'+ str(user.id) +'/cards'}
+                 'user_cards': 'users/' + str(user.id) + '/cards'}
     return jsonify(user_data)
 
 
@@ -63,7 +63,9 @@ def get_one_user(user_id):
 def create_user():
     data = request.get_json()
     hashed_password = generate_password_hash(data['password'], method='sha256')
-    new_user = Users(last_name=data['last_name'], first_name=data['first_name'], patronymic_name=data['patronymic_name'],
+    new_user = Users(last_name=data['last_name'],
+                     first_name=data['first_name'],
+                     patronymic_name=data['patronymic_name'],
                      password=hashed_password, email=data['email'])
     db.session.add(new_user)
     db.session.commit()
@@ -80,17 +82,16 @@ def delete_user(user_id):
     return jsonify({'message': 'User has been deleted!'})
 
 
-#блок для карт
 @app.route('/users/<user_id>/cards', methods=['GET'])
 def get_user_cards(user_id):
     user = Users.query.filter_by(id=user_id).first()
     if not user:
-        return jsonify({'message':'User not found!'})
+        return jsonify({'message': 'User not found!'})
     cards = Cards.query.filter_by(user_id=user_id)
     output = []
     for card in cards:
-        card_data = {'number': card.number, 'cvv_code': card.cvv_code, 'pin_code':card.pin_code,
-                     'user_id':card.user_id,'validity_date': card.validity_date}
+        card_data = {'number': card.number, 'cvv_code': card.cvv_code, 'pin_code': card.pin_code,
+                     'user_id': card.user_id, 'validity_date': card.validity_date}
         output.append(card_data)
     return jsonify({'cards': output})
 
@@ -100,10 +101,14 @@ def get_all_cards():
     cards = Cards.query.all()
     output = []
     for card in cards:
-        card_data = {'number': card.number, 'cvv_code': card.cvv_code, 'pin_code':card.pin_code,
-                     'user_id':card.user_id,'validity_date': card.validity_date}
+        card_data = {'number': card.number,
+                     'cvv_code': card.cvv_code,
+                     'pin_code': card.pin_code,
+                     'user_id': card.user_id,
+                     'validity_date': card.validity_date}
         output.append(card_data)
     return jsonify({'cards': output})
+
 
 def generate_new_card():
     list_number = []
@@ -124,23 +129,24 @@ def generate_new_card():
 @app.route('/users/<user_id>/cards', methods=['POST'])
 def create_user_card(user_id):
     user = Users.query.filter_by(id=user_id).first()
-    data = request.get_json()
     if not user:
-         return jsonify({'message':'User not found!'})
+         return jsonify({'message': 'User not found!'})
+    data = request.get_json()
     if check_password_hash(user.password, data['password']):
-        number_new_card, cvv_new_card, pin_new_card  = generate_new_card()
+        number_new_card, cvv_new_card, pin_new_card = generate_new_card()
         hashed_cvv = generate_password_hash(cvv_new_card, method='sha256')
         hashed_pin = generate_password_hash(pin_new_card, method='sha256')
-        validadion_date = datetime.now() + timedelta(days=365)
-        new_card = Cards(number=number_new_card, cvv_code=hashed_cvv, pin_code=hashed_pin, user_id=user_id,
-                         validity_date=validadion_date )
+        val_date = datetime.now() + timedelta(days=365)
+        new_card = Cards(number=number_new_card,
+                         cvv_code=hashed_cvv,
+                         pin_code=hashed_pin,
+                         user_id=user_id,
+                         validity_date=val_date)
         db.session.add(new_card)
         db.session.commit()
         return jsonify({'message': 'New card created!'})
     else:
         return jsonify({'message': 'Password is not valid!'})
-
-
 
 
 db.create_all()
@@ -153,24 +159,20 @@ class UsersModelView(ModelView):
     column_list = ('id', 'last_name', 'first_name', 'patronymic_name', 'password', 'email')
     column_labels = dict(id='id', last_name='Фамилия', first_name='Имя', patronymic_name='Отчество', password='пароль',
                          email='email')
-    page_size = 20  # the number of entries to display on the list view
+    page_size = 20
 
 
 class CardsModelView(ModelView):
     # can_delete = False
     # can_create = False
     # can_edit = False
-    page_size = 20  # the number of entries to display on the list view
+    page_size = 20
 
 
 admin.add_view(UsersModelView(Users, db.session))
 admin.add_view(CardsModelView(Cards, db.session))
 
-# admin.add_view(ModelView(Users, db.session))
-# admin.add_view(ModelView(Cards, db.session))
 
-# boby = Users.query.all()
-# start the flask loop
 if __name__ == '__main__':
     # app.run()
     app.run(host='0.0.0.0', debug=True, port=12337, use_reloader=True)
