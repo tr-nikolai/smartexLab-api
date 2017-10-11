@@ -3,9 +3,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from werkzeug.security import generate_password_hash, check_password_hash
+
 from random import randint
 from datetime import datetime, timedelta
-
+import logging
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'smaertexlab'
@@ -67,6 +68,8 @@ def create_user():
                      first_name=data['first_name'],
                      patronymic_name=data['patronymic_name'],
                      password=hashed_password, email=data['email'])
+    app.logger.info('User created: {} {} {} | {}'.format(data['last_name'], data['first_name'],
+                                                         data['patronymic_name'], data['email']))
     db.session.add(new_user)
     db.session.commit()
     return jsonify({'message': 'New user created'})
@@ -77,6 +80,8 @@ def delete_user(user_id):
     user = Users.query.filter_by(id=user_id).first()
     if not user:
         return jsonify({'message': 'User not found!'})
+    app.logger.info('User deleted: {} {} {} | {} | id={}'.format(user.last_name, user.first_name,
+                                                                 user.patronymic_name, user.email, user.id))
     db.session.delete(user)
     db.session.commit()
     return jsonify({'message': 'User has been deleted!'})
@@ -123,14 +128,14 @@ def generate_new_card():
     while len(list_pin) != 4:
         list_pin.append(str(randint(0, 9)))
     pin_new_card = ''.join(list_number)
-    return number_new_card,  cvv_new_card, pin_new_card
+    return number_new_card, cvv_new_card, pin_new_card
 
 
 @app.route('/users/<user_id>/cards', methods=['POST'])
 def create_user_card(user_id):
     user = Users.query.filter_by(id=user_id).first()
     if not user:
-         return jsonify({'message': 'User not found!'})
+        return jsonify({'message': 'User not found!'})
     data = request.get_json()
     if check_password_hash(user.password, data['password']):
         number_new_card, cvv_new_card, pin_new_card = generate_new_card()
@@ -142,6 +147,8 @@ def create_user_card(user_id):
                          pin_code=hashed_pin,
                          user_id=user_id,
                          validity_date=val_date)
+
+        app.logger.info('Card for user id={} created: {}'.format(user_id, '*' * 9 + str(number_new_card[-4:])))
         db.session.add(new_card)
         db.session.commit()
         return jsonify({'message': 'New card created!'})
@@ -153,9 +160,9 @@ db.create_all()
 
 
 class UsersModelView(ModelView):
-    # can_delete = False
-    # can_create = False
-    # can_edit = False
+    can_delete = False
+    can_create = False
+    can_edit = False
     column_list = ('id', 'last_name', 'first_name', 'patronymic_name', 'password', 'email')
     column_labels = dict(id='id', last_name='Фамилия', first_name='Имя', patronymic_name='Отчество', password='пароль',
                          email='email')
@@ -163,16 +170,19 @@ class UsersModelView(ModelView):
 
 
 class CardsModelView(ModelView):
-    # can_delete = False
-    # can_create = False
-    # can_edit = False
+    can_delete = False
+    can_create = False
+    can_edit = False
     page_size = 20
 
 
 admin.add_view(UsersModelView(Users, db.session))
 admin.add_view(CardsModelView(Cards, db.session))
 
-
 if __name__ == '__main__':
-    # app.run()
-    app.run(host='0.0.0.0', debug=True, port=12337, use_reloader=True)
+    handler = logging.FileHandler('logfile.log')
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s : %(message)s')
+    handler.setFormatter(formatter)
+    app.logger.addHandler(handler)
+    app.run(host='0.0.0.0', debug=True, port=12334, use_reloader=True)
