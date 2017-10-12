@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
@@ -19,7 +19,7 @@ class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     last_name = db.Column(db.Unicode, nullable=False)
     first_name = db.Column(db.Unicode, nullable=False)
-    patronymic_name = db.Column(db.Unicode, nullable=False)
+    patronymic_name = db.Column(db.Unicode)
     password = db.Column(db.String(50), nullable=False)
     email = db.Column(db.Unicode)
 
@@ -64,15 +64,23 @@ def get_one_user(user_id):
 def create_user():
     data = request.get_json()
     hashed_password = generate_password_hash(data['password'], method='sha256')
-    new_user = Users(last_name=data['last_name'],
-                     first_name=data['first_name'],
-                     patronymic_name=data['patronymic_name'],
-                     password=hashed_password, email=data['email'])
-    app.logger.info('User created: {} {} {} | {}'.format(data['last_name'], data['first_name'],
-                                                         data['patronymic_name'], data['email']))
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify({'message': 'New user created'})
+    try:
+        new_user = Users(last_name=data['last_name'],
+                         first_name=data['first_name'],
+                         patronymic_name=data['patronymic_name'],
+                         password=hashed_password, email=data['email'])
+        db.session.add(new_user)
+        db.session.commit()
+        user = Users.query.filter_by(last_name=data['last_name'],
+                                     first_name=data['first_name'],
+                                     patronymic_name=data['patronymic_name'],
+                                     email=data['email'])[-1]
+        create_message = 'User created: {} {} {} | {} | id= {}'.format(data['last_name'], data['first_name'],
+                                                                       data['patronymic_name'], data['email'], user.id)
+    except:
+        create_message = 'User not created - Invalid names or number of columns.'
+    app.logger.info(create_message)
+    return jsonify({'message': create_message})
 
 
 @app.route('/users/<user_id>', methods=['DELETE'])
@@ -80,11 +88,16 @@ def delete_user(user_id):
     user = Users.query.filter_by(id=user_id).first()
     if not user:
         return jsonify({'message': 'User not found!'})
-    app.logger.info('User deleted: {} {} {} | {} | id={}'.format(user.last_name, user.first_name,
-                                                                 user.patronymic_name, user.email, user.id))
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({'message': 'User has been deleted!'})
+    data = request.get_json()
+    if check_password_hash(user.password, data['password']):
+        db.session.delete(user)
+        db.session.commit()
+        delete_message = 'User deleted: {} {} {} | {} | id={}'.format(user.last_name, user.first_name,
+                                                                      user.patronymic_name, user.email, user.id)
+        app.logger.info(delete_message)
+        return jsonify({'message': delete_message})
+    else:
+        return jsonify({'message': 'Password is not valid!!'})
 
 
 @app.route('/users/<user_id>/cards', methods=['GET'])
@@ -147,13 +160,27 @@ def create_user_card(user_id):
                          pin_code=hashed_pin,
                          user_id=user_id,
                          validity_date=val_date)
-
-        app.logger.info('Card for user id={} created: {}'.format(user_id, '*' * 9 + str(number_new_card[-4:])))
         db.session.add(new_card)
         db.session.commit()
-        return jsonify({'message': 'New card created!'})
+        create_message = 'Card for user id={} created: {}'.format(user_id, '*' * 9 + str(number_new_card[-4:]))
+        app.logger.info(create_message)
+        return jsonify({'message': create_message})
     else:
         return jsonify({'message': 'Password is not valid!'})
+
+
+@app.route('/', methods=['GET'])
+def index_page():
+    return render_template('index.html')
+
+
+@app.route('/log', methods=['GET'])
+def log_page():
+    text_dict = []
+    with open(file="logfile.txt") as filesss:
+        for line in filesss:
+            text_dict.append(line)
+    return render_template('log.html', text=text_dict)
 
 
 db.create_all()
@@ -180,9 +207,9 @@ admin.add_view(UsersModelView(Users, db.session))
 admin.add_view(CardsModelView(Cards, db.session))
 
 if __name__ == '__main__':
-    handler = logging.FileHandler('logfile.log')
+    handler = logging.FileHandler('logfile.txt')
     handler.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s : %(message)s')
     handler.setFormatter(formatter)
     app.logger.addHandler(handler)
-    app.run(host='0.0.0.0', debug=True, port=12333, use_reloader=True)
+    app.run(host='0.0.0.0', debug=True, port=12330, use_reloader=True)

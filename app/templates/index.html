@@ -2,9 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+    <title>Test Project</title>
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+    </head>
+    <body>
 
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+          <a class="navbar-brand" href="#">Test project</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="/">Главная</a></li>
+            <li><a href="/log">Логи</a></li>
+            <li class="active"><a href="/admin">Админка</a></li>
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav><div class="container">
+        <h1>Test Project</h1>
+        <p style="font-size: 20px">Возможности<br>
+            /users  GET  -Просмотр всех пользователей<br>
+            /users  POST  - Создание Нового пользователя.<br>
+            Поля запроса:<br>
+            { "last_name":"",<br>
+             "first_name":"",<br>
+             "patronymic_name":"",<br>
+             "password": "",<br>
+             "email":""}<br>
+            /users/id - GET просмотр пользователя<br>
+            /users/id - DELETE удаление пользователя<br>
+            Поле для удаления. {“password”: “пароль пользователя”}<br>
+            Карты Пользователей.<br>
+            /cards GET просмотр всех карт<br>
+            /users/id/cards - GET просмотр карт одного пользователя<br>
+            /users/id/cards -POST генерирует новую карту<br>
+            Поле для создания карты. {“password”: “пароль пользователя”}<br>
+
+            Добавлена админка для просмотра БД.<br>
+            И выведен лог файл на отдельной странице.<br>
+        </p>
+    </div>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 </body>
 </html>
