@@ -8,6 +8,8 @@ from random import randint
 from datetime import datetime, timedelta
 import logging
 
+from utils import bad_request, not_found, generate_new_card
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'smaertexlab'
@@ -39,35 +41,6 @@ class Cards(db.Model):
 
     def __repr__(self):
         return '<Cards %r>' % self.number
-
-
-#utility func
-def generate_new_card():
-    list_number = []
-    while len(list_number) != 13:
-        list_number.append(str(randint(0, 9)))
-    number_new_card = ''.join(list_number)
-    list_cvv = []
-    while len(list_cvv) != 3:
-        list_cvv.append(str(randint(0, 9)))
-    cvv_new_card = ''.join(list_cvv)
-    list_pin = []
-    while len(list_pin) != 4:
-        list_pin.append(str(randint(0, 9)))
-    pin_new_card = ''.join(list_number)
-    return number_new_card, cvv_new_card, pin_new_card
-
-
-def bad_request(message):
-    response = jsonify({'error': message})
-    response.status_code = 400
-    return response
-
-
-def not_found(message):
-    response = jsonify({'error': message})
-    response.status_code = 404
-    return response
 
 
 #API for Users
@@ -233,4 +206,4 @@ db.create_all()
 
 if __name__ == '__main__':
     #app.run()
-    app.run(host='0.0.0.0', debug=True, port=12320, use_reloader=True)
+    app.run(host='0.0.0.0', debug=True, port=12322, use_reloader=True)
