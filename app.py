@@ -71,23 +71,30 @@ def get_one_user(user_id):
 def create_user():
     data = request.get_json()
     try:
-        hashed_password = generate_password_hash(data['password'], method='sha256')
-        new_user = Users(last_name=data['last_name'],
-                         first_name=data['first_name'],
-                         patronymic_name=data['patronymic_name'],
-                         password=hashed_password, email=data['email'])
-        db.session.add(new_user)
-        db.session.commit()
-        user = Users.query.filter_by(last_name=data['last_name'],
-                                     first_name=data['first_name'],
-                                     patronymic_name=data['patronymic_name'],
-                                     email=data['email'])[-1]
-        create_message = 'User created: {} {} {} | {} | id= {}'.format(data['last_name'], data['first_name'],
-                                                                       data['patronymic_name'], data['email'], user.id)
-        app.logger.info(create_message)
-        return jsonify({'message': create_message})
+        last_name = data['last_name']
+        first_name = data['first_name']
+        patronymic_name = data['patronymic_name']
+        email = data['email']
+        password = data['password']
     except:
         create_message = 'User not created - Invalid names or number of columns.'
+        app.logger.info(create_message)
+        return bad_request(create_message)
+    if last_name != '' and first_name != ''and email !='' and password != '':
+        hashed_password = generate_password_hash(password, method='sha256')
+        new_user = Users(last_name=last_name, first_name=first_name,
+                         patronymic_name=patronymic_name,
+                         password=hashed_password, email=email)
+
+        db.session.add(new_user)
+        db.session.commit()
+        user = Users.query.filter_by(last_name=last_name, first_name=first_name, email=email)[-1]
+        create_message = 'User created: {} {} {} | {} | id= {}'.format(last_name, first_name,
+                                                                       patronymic_name, email, user.id)
+        app.logger.info(create_message)
+        return jsonify({'message': create_message})
+    else:
+        create_message = 'User not created - columns should not be empty'
         app.logger.info(create_message)
         return bad_request(create_message)
 
@@ -206,4 +213,5 @@ db.create_all()
 
 if __name__ == '__main__':
     #app.run()
-    app.run(host='0.0.0.0', debug=True, port=12322, use_reloader=True)
+    app.run(host='0.0.0.0', debug=True, port=12330, use_reloader=True)
+
