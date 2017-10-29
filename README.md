@@ -3,7 +3,7 @@
 
 ### User queries
 /users GET (all users)<br>
-/users POST query fields { "last_name":"", "first_name":"","patronymic_name":"","password": "","email":""}<br>
+/users POST (create user) query fields { "last_name":"", "first_name":"","patronymic_name":"","password": "","email":""}<br>
 /users/id - GET (one user)<br>
 /users/id - DELETE (delete one user) query field {“password”: “_______”}<br>
 
