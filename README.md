@@ -2,7 +2,7 @@
 ## test project
 
 ### User queries
-/users GET (all users)
+<p>/users GET (all users)</p>
 /users POST query fields { "last_name":"", "first_name":"","patronymic_name":"","password": "","email":""}
 /users/id - GET (one user)
 /users/id - DELETE (delete one user) query field {“password”: “пароль пользователя”}
