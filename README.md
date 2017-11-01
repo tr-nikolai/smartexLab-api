@@ -1,5 +1,6 @@
 # smartexLab-api
 ## test project
+### <a href="http://testapiproject.pythonanywhere.com/">Example</a>
 
 ### User queries
 /users GET (all users)<br>
